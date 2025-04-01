@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Synced Audio Player</title>
+</head>
+<body>
+    <script>
+        // ======== CONFIGURATION SECTION ========
+        const audioFiles = [
+            'https://storage.googleapis.com/kender-du-det-test/1.mp3',
+            'https://storage.googleapis.com/kender-du-det-test/2.mp3',
+            'https://storage.googleapis.com/kender-du-det-test/3.mp3',
+            'https://storage.googleapis.com/kender-du-det-test/4.mp3',
+            'https://storage.googleapis.com/kender-du-det-test/5.mp3'
+        ];
+        const teacherTrack = 'https://storage.googleapis.com/kender-du-det-test/l%C3%A6rer.mp3';
+        const videoFile = 'https://storage.googleapis.com/kender-du-det-test/video1.mp4';
+        const startTime = { hour: 12, minute: 01 }; // Set the synchronized start time
+        const timeZoneOffset = 1; // UTC+1 (CET)
+        // =======================================
+    </script>
+
+    <div id="start-page">
+        <h1>Select Your Mode</h1>
+        <button onclick="goToPage('student')">Elev</button>
+        <button onclick="goToPage('teacher')">Lærer</button>
+        <button onclick="goToPage('video')">Video</button>
+    </div>
+    
+    <div id="student-page" style="display: none;">
+        <h1>Welcome to the Synchronized Audio Experience</h1>
+        <p id="countdown-student">Waiting for start time...</p>
+        <p>Assigned Track: <span id="track-number"></span></p>
+        <audio id="student-audio" controls></audio>
+    </div>
+    
+    <div id="teacher-page" style="display: none;">
+        <h1>Lærer</h1>
+        <p id="countdown-teacher">Waiting for start time...</p>
+        <audio id="teacher-audio" controls></audio>
+    </div>
+    
+    <div id="video-page" style="display: none;">
+        <h1>Video</h1>
+        <p id="countdown-video">Waiting for start time...</p>
+        <video id="synced-video" width="600" controls>
+            <source src="" id="video-source" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    
+    <script>
+        let assignedTrack;
+        let userType = '';
+
+        function goToPage(type) {
+            document.getElementById("start-page").style.display = "none";
+            userType = type;
+
+            if (type === 'student') {
+                document.getElementById("student-page").style.display = "block";
+                assignedTrack = Math.floor(Math.random() * 5);
+                document.getElementById("track-number").innerText = assignedTrack + 1;
+                setupAudio("student-audio", audioFiles[assignedTrack]);
+                startCountdown("countdown-student");
+            } else if (type === 'teacher') {
+                document.getElementById("teacher-page").style.display = "block";
+                setupAudio("teacher-audio", teacherTrack);
+                startCountdown("countdown-teacher");
+            } else if (type === 'video') {
+                document.getElementById("video-page").style.display = "block";
+                setupVideo();
+                startCountdown("countdown-video");
+            }
+        }
+
+        function setupAudio(elementId, source) {
+            let audio = document.getElementById(elementId);
+            audio.src = source;
+            audio.load();
+            let syncTime = getSyncTime();
+            setTimeout(() => {
+                audio.currentTime = syncTime;
+                audio.play();
+            }, getTimeUntilStart() * 1000);
+        }
+
+        function startCountdown(countdownId) {
+            setInterval(() => {
+                let diff = getTimeUntilStart();
+                if (diff > 0) {
+                    let minutes = Math.floor(diff / 60);
+                    let seconds = diff % 60;
+                    document.getElementById(countdownId).innerText = `Starting in ${minutes}m ${seconds}s`;
+                } else {
+                    document.getElementById(countdownId).innerText = "Started";
+                }
+            }, 1000);
+        }
+
+        function getTimeUntilStart() {
+            let now = new Date();
+            let targetTime = new Date();
+            targetTime.setUTCHours(startTime.hour - timeZoneOffset, startTime.minute, 0, 0);
+            return Math.floor((targetTime - now) / 1000);
+        }
+
+        function getSyncTime() {
+            let now = new Date();
+            let targetTime = new Date();
+            targetTime.setUTCHours(startTime.hour - timeZoneOffset, startTime.minute, 0, 0);
+            let diff = (now - targetTime) / 1000;
+            return diff > 0 ? diff : 0;
+        }
+
+        function setupVideo() {
+            let video = document.getElementById("synced-video");
+            document.getElementById("video-source").src = videoFile;
+            video.load();
+            let syncTime = getSyncTime();
+            setTimeout(() => {
+                video.currentTime = syncTime;
+                video.play();
+            }, getTimeUntilStart() * 1000);
+        }
+    </script>
+</body>
+</html>
